@@ -1,0 +1,22 @@
+# Keep the build context small and the image clean.
+.git/
+.github/
+.gitignore
+
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+tests/
+.pytest_cache/
+.coverage
+
+*.md
+docker-compose.yml
+.env
+.env.*
+
+.vscode/
+.idea/
+.DS_Store

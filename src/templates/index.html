@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deployment Manifest — Autonomous Deployment Demo</title>
+<style>
+  :root {
+    --ink:    #14181D;
+    --steel:  #333F4B;
+    --muted:  #6B7783;
+    --paper:  #E8EBEE;
+    --card:   #FFFFFF;
+    --line:   #C9D1D8;
+    --signal: #E4A11B;
+    --verify: #2F7D5E;
+
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 2rem 1.25rem 4rem;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; }
+
+  /* ---- Tag: the manifest card, styled after a physical dock tag ---- */
+
+  .tag {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+
+  /* Perforated top edge */
+  .tag::before {
+    content: "";
+    display: block;
+    height: 6px;
+    background-image: radial-gradient(circle at 5px 3px, var(--paper) 2.5px, transparent 3px);
+    background-size: 10px 6px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .tag-head {
+    background: var(--steel);
+    color: #FFF;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .tag-head h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--mono);
+    font-size: .75rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--signal);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .35; }
+  }
+
+  .tag-body { padding: 1.6rem 1.4rem 1.8rem; }
+
+  /* ---- The commit SHA: the value that changes on every deploy ---- */
+
+  .sha-label {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 .3rem;
+  }
+
+  .sha {
+    font-family: var(--mono);
+    font-size: clamp(2rem, 9vw, 3.1rem);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin: 0 0 .5rem;
+    word-break: break-all;
+  }
+
+  .sha-note {
+    margin: 0 0 1.8rem;
+    font-size: .9rem;
+    color: var(--muted);
+    max-width: 34rem;
+  }
+
+  /* ---- Manifest rows with dotted leaders ---- */
+
+  .rows { border-top: 2px solid var(--ink); padding-top: .3rem; }
+
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .82rem;
+  }
+
+  .row dt {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+
+  .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--line);
+    transform: translateY(-.2em);
+    min-width: 1rem;
+  }
+
+  .row dd {
+    margin: 0;
+    text-align: right;
+    word-break: break-all;
+  }
+
+  .row dd.ok { color: var(--verify); }
+
+  /* ---- Pipeline stages: a genuine sequence, so numbered ---- */
+
+  .stages { margin-top: 2.4rem; }
+
+  .stages h2 {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 .9rem;
+    font-weight: 600;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 0 .9rem;
+    padding: .7rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .stage-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--signal);
+    padding-top: .1rem;
+  }
+
+  .stage-name {
+    font-family: var(--mono);
+    font-size: .88rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  .stage-desc {
+    grid-column: 2;
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  /* ---- Footer ---- */
+
+  footer {
+    margin-top: 1.6rem;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.2rem;
+  }
+
+  footer a { color: var(--steel); text-decoration: underline; }
+  footer a:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+  }
+
+  @media (max-width: 30rem) {
+    .row { flex-wrap: wrap; }
+    .leader { display: none; }
+    .row dd { text-align: left; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <article class="tag">
+    <div class="tag-head">
+      <h1>Deployment Manifest</h1>
+      <span class="status"><span class="dot" aria-hidden="true"></span>Live · {{ info.environment }}</span>
+    </div>
+
+    <div class="tag-body">
+
+      <p class="sha-label">Serving commit</p>
+      <p class="sha">{{ info.commit_short }}</p>
+      <p class="sha-note">
+        No one typed a command to put this page here. It was built, packaged,
+        and deployed by a pipeline that ran when code was pushed. Push again and
+        this value changes.
+      </p>
+
+      <dl class="rows">
+        <div class="row">
+          <dt>Version</dt><span class="leader"></span><dd>{{ info.app_version }}</dd>
+        </div>
+        <div class="row">
+          <dt>Image tag</dt><span class="leader"></span><dd>{{ info.image_tag }}</dd>
+        </div>
+        <div class="row">
+          <dt>Built at</dt><span class="leader"></span><dd>{{ info.built_at }}</dd>
+        </div>
+        <div class="row">
+          <dt>Container</dt><span class="leader"></span><dd>{{ info.container_host }}</dd>
+        </div>
+        <div class="row">
+          <dt>Started</dt><span class="leader"></span><dd>{{ info.started_at }}</dd>
+        </div>
+        <div class="row">
+          <dt>Uptime</dt><span class="leader"></span><dd>{{ info.uptime_seconds }}s</dd>
+        </div>
+        <div class="row">
+          <dt>Health</dt><span class="leader"></span><dd class="ok">passing</dd>
+        </div>
+      </dl>
+
+      <section class="stages">
+        <h2>Pipeline that shipped this</h2>
+        {% for name, desc in stages %}
+        <div class="stage">
+          <span class="stage-num">{{ "%02d"|format(loop.index) }}</span>
+          <span class="stage-name">{{ name }}</span>
+          <span class="stage-desc">{{ desc }}</span>
+        </div>
+        {% endfor %}
+      </section>
+
+      <footer>
+        <span><a href="/health">/health</a></span>
+        <span><a href="/api/info">/api/info</a></span>
+        <span>Flask · Docker · GitHub Actions · GHCR · Render</span>
+      </footer>
+
+    </div>
+  </article>
+
+</div>
+</body>
+</html>

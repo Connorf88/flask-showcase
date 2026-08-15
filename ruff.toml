@@ -1,0 +1,5 @@
+# Linting rules for the pipeline's lint job.
+line-length = 100
+
+[lint]
+select = ["E", "F", "W", "I"]
