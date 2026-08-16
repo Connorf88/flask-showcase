@@ -142,17 +142,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      deployed: ${{ steps.trigger.outputs.deployed }}
     environment:
       name: production
       url: ${{ vars.APP_URL }}
     steps:
       - name: Trigger Render deploy
+        id: trigger
         run: |
           if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
-            echo "RENDER_DEPLOY_HOOK is not set. Add it under Settings → Secrets and variables → Actions."
-            exit 1
+            echo "RENDER_DEPLOY_HOOK is not set. Skipping deploy."
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           curl --fail --silent --show-error -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
           echo "Deploy triggered."
 
   # ===========================================================================
@@ -166,6 +171,7 @@ jobs:
     name: 05 · Verify deployment
     runs-on: ubuntu-latest
     needs: deploy
+    if: needs.deploy.outputs.deployed == 'true'
     steps:
       - name: Wait for the new commit to go live
         run: |
